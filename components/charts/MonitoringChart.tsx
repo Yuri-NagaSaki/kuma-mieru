@@ -56,7 +56,7 @@ export function MonitoringChart({
   }, [heartbeats, selectedRange]);
 
   // Calculate min and max for better Y axis scaling
-  const pings = filteredData.map((d) => d.ping).filter((p) => p !== null && p > 0);
+  const pings = filteredData.map((d) => d.ping).filter((p): p is number => p !== null && p > 0);
   const minPing = pings.length > 0 ? Math.max(0, Math.min(...pings) - 10) : 0;
   const maxPing = pings.length > 0 ? Math.min(3600000, Math.max(...pings) + 10) : 100;
 
