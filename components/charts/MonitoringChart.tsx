@@ -41,18 +41,24 @@ export function MonitoringChart({
   const filteredData = React.useMemo(() => {
     const count = countRanges.find((r) => r.key === selectedRange)?.count || 100;
 
-    return heartbeats.slice(-count).map((hb) => ({
-      time: new Date(hb.time).getTime(),
-      ping: hb.ping || 0,
-      status: hb.status,
-      color: getLatencyColor(hb.ping || 0),
-    }));
+    // 过滤掉异常值（比如超过1小时的延迟）
+    return heartbeats.slice(-count).map((hb) => {
+      const ping = hb.ping || 0;
+      // 如果延迟超过1小时，认为是异常值，显示为null
+      const validPing = ping >= 3600000 ? null : ping;
+      return {
+        time: new Date(hb.time).getTime(),
+        ping: validPing,
+        status: hb.status,
+        color: getLatencyColor(validPing || 0),
+      };
+    });
   }, [heartbeats, selectedRange]);
 
   // Calculate min and max for better Y axis scaling
-  const pings = filteredData.map((d) => d.ping).filter((p) => p > 0);
-  const minPing = Math.max(0, Math.min(...pings) - 10);
-  const maxPing = Math.max(...pings) + 10;
+  const pings = filteredData.map((d) => d.ping).filter((p) => p !== null && p > 0);
+  const minPing = pings.length > 0 ? Math.max(0, Math.min(...pings) - 10) : 0;
+  const maxPing = pings.length > 0 ? Math.min(3600000, Math.max(...pings) + 10) : 100;
 
   const handleRangeChange = (key: React.Key) => {
     setSelectedRange(key as string);

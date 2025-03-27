@@ -26,18 +26,30 @@ export function formatLatency(ms: number): string {
  * @param ms latency in milliseconds
  * @returns formatted string with unit, more compact than formatLatency
  */
-export function formatLatencyForAxis(ms: number): string {
+export function formatLatencyForAxis(ms: number | null): string {
+  if (!ms && ms !== 0) return '-';
+
   if (ms <= 200) {
-    return `${ms} ms`;
+    return `${ms.toFixed(0)} ms`;
+  }
+
+  if (ms < 1000) {
+    return `${ms.toFixed(0)} ms`;
   }
 
   if (ms < 60000) {
-    return `${(ms / 1000).toFixed(2)}s`;
+    return `${(ms / 1000).toFixed(1)}s`;
   }
 
-  const minutes = Math.floor(ms / 60000);
-  const seconds = ((ms % 60000) / 1000).toFixed(1);
-  return `${minutes}m${seconds}s`;
+  if (ms < 3600000) {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = ((ms % 60000) / 1000).toFixed(0);
+    return `${minutes}m${seconds}s`;
+  }
+
+  // 对于超过1小时的延迟，显示为小时
+  const hours = (ms / 3600000).toFixed(1);
+  return `${hours}h`;
 }
 
 /**
@@ -48,7 +60,7 @@ export function formatLatencyForAxis(ms: number): string {
  * - "warning" for 100ms-1000ms
  * - "danger" for > 1000ms or invalid values
  */
-export function getLatencyColor(ms: number): 'success' | 'warning' | 'danger' {
+export function getLatencyColor(ms: number | null): 'success' | 'warning' | 'danger' {
   if (!ms && ms !== 0) return 'danger';
   if (ms < 200) return 'success';
   if (ms < 1000) return 'warning';
